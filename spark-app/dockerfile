@@ -1,0 +1,3 @@
+FROM bitnami/spark:latest
+COPY spark-stream.py /app/spark-stream.py
+CMD ["/opt/bitnami/spark/bin/spark-submit", "/app/spark-stream.py"]

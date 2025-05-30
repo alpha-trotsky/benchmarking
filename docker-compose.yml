@@ -1,0 +1,47 @@
+services:
+# I have 4 containers: spark-master, spark-worker, mock-data and spark-app.
+  spark-master:
+    image: bitnami/spark:latest  #the image launches a spark master node 
+    environment:
+      - SPARK_MODE=master
+    ports:
+      - "7077:7077" #port used by spark workers
+      - "8080:8080" #spark master ui 
+  spark-worker-main:
+    image: bitnami/spark:latest
+    depends_on:
+      - spark-master
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+    ports:
+      - "8081:8081"
+  
+  spark-worker:
+    image: bitnami/spark:latest
+    #the image launches a spark worker node
+    depends_on:
+      - spark-master #so it behaves as spark-masters tell it to
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077  # how to register w master node
+    #ports:
+    #  - "8081:8081" spark ui again and this is for 1 worker
+
+    #this is how you scale to multiple workers docker-compose up --scale spark-worker=3
+  mock-data:
+    #container has the mock-data folder with mock stream server
+    build:
+      context: ./mock-data
+    ports:
+      - "9999:9999" # this is the port for our stream server
+
+  spark-app:
+    #container has the spark-app code image is in it
+    build:
+      context: ./spark-app
+    depends_on:
+      - spark-master # the container code depends on the containers for spark master and the mock-data were generating
+      - mock-data
+    environment:
+      - SPARK_MODE=client #so this is what client is its the actual app its how you talk to spark like client API for RIT 
