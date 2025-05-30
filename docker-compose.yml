@@ -28,6 +28,16 @@ services:
     #ports:
     #  - "8081:8081" spark ui again and this is for 1 worker
 
+  #flink-app:
+  #sets up flink. Builds as per flink's image and builds a dependency on mock-data server
+    #build:
+      #context: ./flink-app
+    #depends_on:
+    #  - mock-data
+    #environment:
+     # - FLINK_MODE=application
+      
+    
     #this is how you scale to multiple workers docker-compose up --scale spark-worker=3
   mock-data:
     #container has the mock-data folder with mock stream server
