@@ -1,5 +1,7 @@
-FROM python:3.10-slim 
+FROM python:3.10-slim
 #what python is used
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 WORKDIR /app
 #sets the directory to app 
 COPY mock-stream-server.py .

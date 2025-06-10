@@ -1,12 +1,27 @@
+version: "3.9"
 services:
-# I have 4 containers: spark-master, spark-worker, mock-data and spark-app.
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      - KAFKA_ADVERTISED_HOST_NAME=kafka
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
   spark-master:
-    image: bitnami/spark:latest  #the image launches a spark master node 
+    image: bitnami/spark:latest
     environment:
       - SPARK_MODE=master
     ports:
-      - "7077:7077" #port used by spark workers
-      - "8080:8080" #spark master ui 
+      - "7077:7077"
+      - "8080:8080"
+    volumes:
+      - ./metrics:/app/metrics
   spark-worker-main:
     image: bitnami/spark:latest
     depends_on:
@@ -16,42 +31,43 @@ services:
       - SPARK_MASTER_URL=spark://spark-master:7077
     ports:
       - "8081:8081"
-  
   spark-worker:
     image: bitnami/spark:latest
-    #the image launches a spark worker node
     depends_on:
-      - spark-master #so it behaves as spark-masters tell it to
+      - spark-master
     environment:
       - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:7077  # how to register w master node
-    #ports:
-    #  - "8081:8081" spark ui again and this is for 1 worker
-
-  #flink-app:
-  #sets up flink. Builds as per flink's image and builds a dependency on mock-data server
-    #build:
-      #context: ./flink-app
-    #depends_on:
-    #  - mock-data
-    #environment:
-     # - FLINK_MODE=application
-      
-    
-    #this is how you scale to multiple workers docker-compose up --scale spark-worker=3
+      - SPARK_MASTER_URL=spark://spark-master:7077
   mock-data:
-    #container has the mock-data folder with mock stream server
     build:
       context: ./mock-data
     ports:
-      - "9999:9999" # this is the port for our stream server
-
+      - "9998:9998"
+    depends_on:
+      - kafka
   spark-app:
-    #container has the spark-app code image is in it
     build:
       context: ./spark-app
     depends_on:
-      - spark-master # the container code depends on the containers for spark master and the mock-data were generating
+      - spark-master
       - mock-data
     environment:
-      - SPARK_MODE=client #so this is what client is its the actual app its how you talk to spark like client API for RIT 
+      - SPARK_MODE=client
+    user: root
+    command: >
+      /opt/bitnami/spark/bin/spark-submit
+      --master spark://spark-master:7077
+      /app/spark-stream.py
+    volumes:
+      - ./metrics:/app/metrics
+  flink-app:
+    build:
+      context: ./flink-app
+    depends_on:
+      - kafka
+    environment:
+      - FLINK_MODE=application
+networks:
+  default:
+    name: my-network
+    driver: bridge

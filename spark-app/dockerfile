@@ -1,3 +1,5 @@
 FROM bitnami/spark:latest
 COPY spark-stream.py /app/spark-stream.py
+USER root
+RUN mkdir -p /app/metrics && chmod -R 777 /app/metrics
 CMD ["/opt/bitnami/spark/bin/spark-submit", "/app/spark-stream.py"]
