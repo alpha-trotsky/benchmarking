@@ -9,7 +9,7 @@ from datetime import datetime
 
 # Add metrics package to path
 sys.path.append('/app/metrics')
-from metrics_collector import MetricsCollector
+from metrics.metrics_collector import MetricsCollector
 
 # Initialize metrics collector
 metrics_collector = MetricsCollector('/app/metrics')

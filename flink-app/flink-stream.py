@@ -1,4 +1,4 @@
-from pyflink.datastream import StreamExecutionEnvironment
+from pyflink.datastream import StreamExecutionEnvironment, CheckpointingMode
 from pyflink.table import StreamTableEnvironment, DataTypes
 from pyflink.common.time import Time
 import sys
@@ -8,7 +8,7 @@ from datetime import datetime
 
 # Add metrics package to path
 sys.path.append('/app/metrics')
-from metrics_collector import MetricsCollector
+from metrics.metrics_collector import MetricsCollector
 
 # Initialize metrics collector
 metrics_collector = MetricsCollector('/app/metrics')
@@ -28,7 +28,7 @@ env.get_checkpoint_config().set_checkpointing_mode(CheckpointingMode.EXACTLY_ONC
 t_env.execute_sql("""
     CREATE TABLE numbers (
         event_time TIMESTAMP(3),
-        value INT,
+        data_value INT,
         run_id STRING,
         input_timestamp TIMESTAMP(3)
     ) WITH (
@@ -46,7 +46,7 @@ t_env.execute_sql("""
     CREATE TABLE flink_metrics (
         run_id STRING,
         event_time TIMESTAMP(3),
-        value INT,
+        data_value INT,
         processing_time TIMESTAMP(3),
         latency_ms BIGINT,
         watermark_lag_ms BIGINT,
@@ -66,7 +66,7 @@ t_env.execute_sql("""
     SELECT
         run_id,
         event_time,
-        value,
+        data_value,
         CURRENT_TIMESTAMP as processing_time,
         UNIX_TIMESTAMP(CURRENT_TIMESTAMP) - UNIX_TIMESTAMP(event_time) as latency_ms,
         UNIX_TIMESTAMP(CURRENT_TIMESTAMP) - UNIX_TIMESTAMP(WATERMARK(event_time)) as watermark_lag_ms,

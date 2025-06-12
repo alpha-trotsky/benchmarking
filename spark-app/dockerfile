@@ -1,5 +1,13 @@
 FROM bitnami/spark:latest
-COPY spark-stream.py /app/spark-stream.py
+
+# Install Python dependencies
 USER root
-RUN mkdir -p /app/metrics && chmod -R 777 /app/metrics
+RUN pip install psutil statistics
+
+# Copy the Spark job
+COPY spark-stream.py /app/spark-stream.py
+
+# No need to manually create /app/metrics — the volume will handle it
+# No need to COPY metrics — that's done via docker-compose
+
 CMD ["/opt/bitnami/spark/bin/spark-submit", "/app/spark-stream.py"]

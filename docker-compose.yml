@@ -67,6 +67,9 @@ services:
       - kafka
     environment:
       - FLINK_MODE=application
+    volumes:
+      - ./metrics:/app/metrics
+
 networks:
   default:
     name: my-network

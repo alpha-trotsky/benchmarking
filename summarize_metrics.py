@@ -25,7 +25,7 @@ def summarize_metrics():
     if os.path.exists(flink_metrics_path):
         with open(flink_metrics_path, mode='r') as infile:
             reader = csv.reader(infile)
-            # Assuming the CSV has a header and latency is in the 4th column (index 3)
+            
             next(reader) # Skip header
             for rows in reader:
                 try:
