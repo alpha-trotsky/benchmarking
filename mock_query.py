@@ -1,16 +1,25 @@
 from pyspark.sql import SparkSession
 
-spark = SparkSession.builder \
-    .appName("MockQueryTest") \
+spark = SparkSession.builder \\
+    .appName("MockQueryTest") \\
     .getOrCreate()
 
-# Load CSV
-df = spark.read.option("header", True).csv("/dev/shm/mock_people.csv")
+# Load the CSV file
+df = spark.read.option("header", True).csv("/dev/shm/mock_people_big.csv")
 
-# Simple query: filter age > 30
+# Filter for rows where age > 30
 result = df.filter(df.age.cast("int") > 30)
 
-# Save output to disk
-result.write.mode("overwrite").csv("/dev/shm/mock_output")
+# Collect and print the result to stdout/logs
+rows = result.collect()
+print("id,name,age")
+for row in rows:
+    print(f"{row.id},{row.name},{row.age}")
+
+# Optionally write to a file on the driver node
+with open("/dev/shm/mock_output_collected.csv", "w") as f:
+    f.write("id,name,age\\n")
+    for row in rows:
+        f.write(f"{row.id},{row.name},{row.age}\\n")
 
 spark.stop()
